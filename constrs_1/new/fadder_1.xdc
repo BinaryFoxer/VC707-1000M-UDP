@@ -1,0 +1,21 @@
+set_property PACKAGE_PIN AM39 [get_ports cout]
+set_property PACKAGE_PIN AN39 [get_ports sum]
+set_property PACKAGE_PIN AV30 [get_ports a]
+set_property PACKAGE_PIN AY33 [get_ports b]
+set_property PACKAGE_PIN BA31 [get_ports cin]
+set_property IOSTANDARD LVCMOS18 [get_ports a]
+set_property IOSTANDARD LVCMOS18 [get_ports b]
+set_property IOSTANDARD LVCMOS18 [get_ports cin]
+set_property IOSTANDARD LVCMOS18 [get_ports cout]
+set_property IOSTANDARD LVCMOS18 [get_ports sum]
+
+set_property PACKAGE_PIN AN2 [get_ports txp]
+set_property PACKAGE_PIN AM39 [get_ports led_link]
+set_property IOSTANDARD LVCMOS18 [get_ports led_link]
+set_property PACKAGE_PIN AR40 [get_ports sys_rst_n]
+set_property IOSTANDARD LVCMOS18 [get_ports sys_rst_n]
+
+set_property PACKAGE_PIN E19 [get_ports sys_clk_p]
+set_property IOSTANDARD LVDS [get_ports sys_clk_p]
+
+set_property PACKAGE_PIN AH8 [get_ports gtrefclk_p]
