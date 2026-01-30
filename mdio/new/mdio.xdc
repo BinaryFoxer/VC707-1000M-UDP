@@ -33,3 +33,11 @@ set_property PACKAGE_PIN AU39 [get_ports test_led]
 
 set_property IOSTANDARD LVCMOS18 [get_ports sys_rst]
 set_property PACKAGE_PIN AP40 [get_ports sys_rst]
+
+set_property PACKAGE_PIN AM8 [get_ports sgmii_rxp]
+set_property PACKAGE_PIN AM7 [get_ports sgmii_rxn]
+set_property PACKAGE_PIN AN2 [get_ports sgmii_txp]
+set_property PACKAGE_PIN AN1 [get_ports sgmii_txn]
+
+set_property PACKAGE_PIN AH8 [get_ports sgmii_clk_p]
+set_property PACKAGE_PIN AH7 [get_ports sgmii_clk_n]

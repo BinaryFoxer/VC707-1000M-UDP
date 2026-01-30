@@ -133,7 +133,7 @@ module mdio_ctrl(
                 end
 
                 5'd2:begin
-                    wr_data_t <= (rd_data_t & 16'b0111_1111_1111_0000) | 16'b1000_0000_0000_0000;   // 配置成千兆SGMII模式，其它位不变
+                    wr_data_t <= (rd_data_t & 16'b0111_1111_1111_0000) | 16'b1000_0000_0000_0100;   // 配置成千兆SGMII模式，其它位不变
                     flow_cnt <= 5'd3;
                 end
 
