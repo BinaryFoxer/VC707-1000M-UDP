@@ -1,8 +1,9 @@
 `timescale 1ns / 1ps
 
 module mdio_wr_test(
-    input               sys_clk_p,
-    input               sys_clk_n,
+    // input               sys_clk_p,
+    // input               sys_clk_n,
+    input               sys_clk,            // 输入200mhz主时钟
     input               sys_rst,
 
     output              eth_rst_n,
@@ -12,9 +13,8 @@ module mdio_wr_test(
     input               touch_key,
     output      [1:0]   led,
     output              id_led,              // 读id正确指示led
-    output              test_led,          // 读访问错误指示led
-    output              download_sus         // 下载代码成功指示led
-
+    output              test_led             // 读访问错误指示led
+    
     );
 
     // parameter define
@@ -33,20 +33,20 @@ module mdio_wr_test(
     wire  [15:0]    op_rd_data;
     wire            op_rd_ack;
     wire            dri_clk;
-    wire            sys_clk;
+    // wire            sys_clk;
     
-    IBUFDS #(
-      .DIFF_TERM("FALSE"),       // Differential Termination
-      .IBUF_LOW_PWR("FALSE"),     // Low power="TRUE", Highest performance="FALSE" 
-      .IOSTANDARD("LVDS")     // Specify the input I/O standard
-   ) IBUFDS_inst (
-      .O(sys_clk),  // Buffer output
-      .I(sys_clk_p),  // Diff_p buffer input (connect directly to top-level port)
-      .IB(sys_clk_n) // Diff_n buffer input (connect directly to top-level port)
-   );
+//     IBUFDS #(
+//       .DIFF_TERM("FALSE"),       // Differential Termination
+//       .IBUF_LOW_PWR("FALSE"),     // Low power="TRUE", Highest performance="FALSE" 
+//       .IOSTANDARD("LVDS")     // Specify the input I/O standard
+//    ) IBUFDS_inst (
+//       .O(sys_clk),  // Buffer output
+//       .I(sys_clk_p),  // Diff_p buffer input (connect directly to top-level port)
+//       .IB(sys_clk_n) // Diff_n buffer input (connect directly to top-level port)
+//    );
 
     // 以太网硬复位
-    assign eth_rst_n = ~sys_rst;
+    //assign eth_rst_n = ~sys_rst;
     // always@(posedge sys_clk or posedge sys_rst) begin
     //     if(sys_rst) begin
     //         eth_rst_cnt <= 22'd0;
@@ -64,7 +64,7 @@ module mdio_wr_test(
     //     end
     // end
     // assign eth_rst_n = eth_rst_n_r;
-    assign download_sus = eth_mdc;
+    // assign download_sus = eth_mdc;
 
     // 例化以太网驱动模块
     mdio_dri #(

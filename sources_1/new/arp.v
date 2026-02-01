@@ -23,16 +23,20 @@ module arp(
     input        [47:0] des_mac,                        // 目标mac地址
     input        [31:0] des_ip,                         // 目标ip
     output       [47:0] src_mac,                        // 源mac地址
-    output       [31:0] src_ip                           // 源ip地址
+    output       [31:0] src_ip,                         // 源ip地址
+    output              arp_led,                        // arp测试led
+    output              arp_get,
+    output       [4:0]  cur_state
+
     );
 
     // parameter define
     // 板卡mac和ip
-    parameter BOARD_MAC = 48'h00_0a_35_01_fe_c0;        // 板卡MAC地址
-    parameter BOARD_IP  = 32'hC0_A8_00_02;              // 板卡IP地址
+    parameter  BOARD_MAC = 48'h00_11_22_33_44_55;        // 板卡MAC地址
+    parameter  BOARD_IP  = {8'd192,8'd168,8'd0,8'd2}; 
     // 目标mac和ip
-    parameter   DES_MAC   = 48'hA8_2B_DD_25_DA_43;      // PC mac
-    parameter   DES_IP    = 32'hC0_A8_00_03;            // PC ip
+    parameter  DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
+    parameter  DES_IP    = {8'd192,8'd168,8'd0,8'd3};
 
     // wire define
     wire          crc_en;             // crc开始接收数据使能
@@ -53,15 +57,16 @@ module arp(
         .rst(rst),        
         .arp_tx_en(arp_tx_en),  
         .arp_tx_type(arp_tx_type),
-        .des_mac(des_mac),    
-        .des_ip(des_ip),     
+        .des_mac(src_mac),                      // ？？？？ 
+        .des_ip(src_ip),     
         .crc_data(crc_data),   
         .crc_next(crc_next[31:24]),   
         .crc_en(crc_en),     
         .crc_clr(crc_clr),    
         .gmii_txd(gmii_txd),   
         .gmii_tx_en(gmii_tx_en), 
-        .gmii_tx_done(gmii_tx_done)
+        .gmii_tx_done(gmii_tx_done),
+        .arp_led(arp_led)
     );
 
     arp_rx #(
@@ -75,7 +80,9 @@ module arp(
         .arp_rx_done(arp_rx_done),
         .arp_rx_type(arp_rx_type),
         .src_ip(src_ip),    
-        .src_mac(src_mac)    
+        .src_mac(src_mac),
+        .arp_get(arp_get),
+        .cur_state(cur_state)    
 
     );
 

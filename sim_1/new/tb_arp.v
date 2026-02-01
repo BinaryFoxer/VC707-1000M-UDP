@@ -10,12 +10,11 @@ module tb_arp;
 parameter T = 8;                                // 时钟周期8ns
 parameter OP_CYCLE = 100;                       // 操作周期
 
-// 板卡mac和ip
-parameter BOARD_MAC = 48'h00_0a_35_01_fe_c0;        // 板卡MAC地址
-parameter BOARD_IP  = 32'hC0_A8_00_02;              // 板卡IP地址
+parameter  BOARD_MAC = 48'h00_11_22_33_44_55;        // 板卡MAC地址
+parameter  BOARD_IP  = {8'd192,8'd168,8'd0,8'd2}; 
 // 目标mac和ip
-parameter   DES_MAC   = 48'hFF_FF_FF_FF_FF_FF;      // PC mac
-parameter   DES_IP    = 32'hC0_A8_00_03;            // PC ip
+parameter  DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
+parameter  DES_IP  = {8'd192,8'd168,8'd0,8'd3}; 
 
 // reg define
 reg                 gmii_clk;
@@ -40,6 +39,7 @@ wire        [31:0]  src_ip     ; //接收到目的IP地址
 wire        [47:0]  des_mac    ; //发送的目标MAC地址
 wire        [31:0]  des_ip     ; //发送的目标IP地址
 wire                gmii_tx_done;
+wire                arp_led;
 
 
 assign  gmii_rx_clk = gmii_clk;
@@ -129,7 +129,8 @@ end
         .des_mac            (des_mac),    
         .des_ip             (des_ip),     
         .src_mac            (src_mac),    
-        .src_ip             (src_ip)  
+        .src_ip             (src_ip),
+        .arp_led            (arp_led)  
     );
 
 

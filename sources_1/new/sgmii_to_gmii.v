@@ -12,6 +12,8 @@ module sgmii_to_gmii(
 
     input                   sgmii_clk_n,                // gtx使用的sgmii参考时钟
     input                   sgmii_clk_p,                // gtx使用的sgmii参考时钟
+    input                   independent_clock_bufg,     // 输入200mhz独立时钟
+
     input                   sgmii_rx_n,                 // sgmii接收数据
     input                   sgmii_rx_p,                 // sgmii接收数据
     input                   gmii_tx_en,                 // gmii发送使能
@@ -27,32 +29,32 @@ module sgmii_to_gmii(
     output                  sgmii_tx_p,                 // sgmii发送数据
 
     output                  resetdone,                  // IP核复位完成信号
-    output                  mmcm_locked_out             // IP核内部时钟锁定稳定（时钟稳定后开始传输数据）
+    output                  mmcm_locked_out,            // IP核内部时钟锁定稳定（时钟稳定后开始传输数据）
+    output                  sgmii_clk_en,
+    output           [15:0] status_vector
     );
 
     // wire define
     wire                gtrefclk_out;                   // 125M参考时钟输出
     wire                gtrefclk_bufg_out;              // 125M参考时钟全局缓冲输出
-    wire                gtrefclk_bufg;                  // 125M参考时钟全局缓冲输入
+    // wire                independent_clock_bufg;         // 200M独立时钟全局缓冲输入
     wire                sgmii_clk_r;                    // sgmii内部恢复时钟
-    wire                sgmii_clk_f;                    // sgmii内部频率时钟
-    wire                sgmii_clk_en;                   // sgmii时钟使能信号
-    wire        [15:0]  status_vector;                  // PHY寄存器状态向量                
+    wire                sgmii_clk_f;                    // sgmii内部频率时钟 
   
     // assign gmii_tx_clk = gmii_rx_clk;
     
-    // -------------------------产生125M参考时钟全局缓冲输入----------------------
+    // -------------------------产生200M独立时钟全局缓冲输入----------------------
     // IBUFDS_GTE2 #(
     //   .CLKCM_CFG("TRUE"),   // Refer to Transceiver User Guide
     //   .CLKRCV_TRST("TRUE"), // Refer to Transceiver User Guide
     //   .CLKSWING_CFG(2'b11)  // Refer to Transceiver User Guide
     //    )
     //    GTREFCLK_BUFG (
-    //       .O(gtrefclk_bufg),         // 1-bit output: Refer to Transceiver User Guide
+    //       .O(independent_clock_bufg),         // 1-bit output: Refer to Transceiver User Guide
     //       .ODIV2(), // 1-bit output: Refer to Transceiver User Guide
     //       .CEB(1'b0),     // 1-bit input: Refer to Transceiver User Guide
-    //       .I(sgmii_clk_p),         // 1-bit input: Refer to Transceiver User Guide
-    //       .IB(sgmii_clk_n)        // 1-bit input: Refer to Transceiver User Guide
+    //       .I(sys_clk_p),         // 1-bit input: Refer to Transceiver User Guide
+    //       .IB(sys_clk_n)        // 1-bit input: Refer to Transceiver User Guide
     //    );
 
 
@@ -66,7 +68,7 @@ module sgmii_to_gmii(
       .txp(sgmii_tx_p),                                        // output wire txp
       .rxn(sgmii_rx_n),                                        // input wire rxn
       .rxp(sgmii_rx_p),                                        // input wire rxp
-      .independent_clock_bufg(),           // input wire independent_clock_bufg
+      .independent_clock_bufg(independent_clock_bufg),         // input wire independent_clock_bufg
       .userclk_out(),                                   // output wire userclk_out
       .userclk2_out(gmii_tx_clk),                       // output wire userclk2_out
       .rxuserclk_out(),                                 // output wire rxuserclk_out
@@ -84,17 +86,18 @@ module sgmii_to_gmii(
       .gmii_rx_dv(gmii_rx_dv),                          // output wire gmii_rx_dv
       .gmii_rx_er(gmii_rx_er),                          // output wire gmii_rx_er
       .gmii_isolate(),                                  // output wire gmii_isolate
-      .configuration_vector(5'b00000),                  // input wire [4 : 0] configuration_vector
+      .configuration_vector(5'b10000),                  // input wire [4 : 0] configuration_vector，开启AN
+      .an_interrupt(),                                  // output wire an_interrupt
+      .an_adv_config_vector(16'h0001),                          // input wire [15 : 0] an_adv_config_vector，SGMII MAC mode不用给值
+      .an_restart_config(1'b0),                         // input wire an_restart_config
       .speed_is_10_100(1'b0),                           // input wire speed_is_10_100
       .speed_is_100(1'b0),                              // input wire speed_is_100
-      .status_vector(status_vector),                                 // output wire [15 : 0] status_vector
+      .status_vector(status_vector),                    // output wire [15 : 0] status_vector
       .reset(sys_rst),                                  // input wire reset
       .signal_detect(1'b1),                             // input wire signal_detect
       .gt0_qplloutclk_out(),                            // output wire gt0_qplloutclk_out
       .gt0_qplloutrefclk_out()                          // output wire gt0_qplloutrefclk_out
     );
-
-
 
 
 endmodule

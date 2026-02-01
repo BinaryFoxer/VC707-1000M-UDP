@@ -19,14 +19,17 @@ module arp_tx(
     output reg              crc_clr,            // crc复位
     output reg      [7:0]   gmii_txd,           // gmii发送数据
     output reg              gmii_tx_en,         // gmii发送使能
-    output reg              gmii_tx_done        // gmii发送完成
+    output reg              gmii_tx_done,       // gmii发送完成
+    output reg              arp_led
+
     );
 
     // parameter define
-    parameter   BOARD_MAC = 48'h00_0a_35_01_fe_c0;      // 板卡mac
-    parameter   BOARD_IP  = 32'hC0_A8_00_02;            // 板卡ip
-    parameter   DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
-    parameter   DES_IP    = 32'hC0_A8_00_03;            // PC ip
+    parameter  BOARD_MAC = 48'h00_11_22_33_44_55;        // 板卡MAC地址
+    parameter  BOARD_IP  = {8'd192,8'd168,8'd0,8'd2}; 
+    // 目标mac和ip
+    parameter  DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
+    parameter  DES_IP    = {8'd192,8'd168,8'd0,8'd3};
 
     localparam  st_idle         = 5'b0_0001;            // 空闲状态
     localparam  st_preamble     = 5'b0_0010;            // 发送前导码
@@ -131,6 +134,7 @@ module arp_tx(
             gmii_txd    <= 8'd0;
             gmii_tx_en  <= 1'b0;
             crc_en      <= 1'b0;
+            arp_led     <= 1'b0;
             
             // 初始化数组
             //前导码 7个8'h55 + 1个8'hd5 
@@ -178,12 +182,12 @@ module arp_tx(
             arp_data[15] <= BOARD_IP[23:16];
             arp_data[16] <= BOARD_IP[15:8];
             arp_data[17] <= BOARD_IP[7:0];
-            arp_data[18] <= DES_MAC[47:40];             //接收端(目的)MAC地址(请求帧全为0?)
-            arp_data[19] <= DES_MAC[39:32];
-            arp_data[20] <= DES_MAC[31:24];
-            arp_data[21] <= DES_MAC[23:16];
-            arp_data[22] <= DES_MAC[15:8];
-            arp_data[23] <= DES_MAC[7:0];  
+            arp_data[18] <= 8'h00;                      //接收端(目的)MAC地址(请求帧全为0?)
+            arp_data[19] <= 8'h00;
+            arp_data[20] <= 8'h00;
+            arp_data[21] <= 8'h00;
+            arp_data[22] <= 8'h00;
+            arp_data[23] <= 8'h00;  
             arp_data[24] <= DES_IP[31:24];              //接收端(目的)IP地址
             arp_data[25] <= DES_IP[23:16];
             arp_data[26] <= DES_IP[15:8];
@@ -196,6 +200,8 @@ module arp_tx(
             gmii_tx_en <= 1'b0;
             case(next_state)                            // 想要cur_state跳转后立刻输出这里必须用next_state
                 st_idle:begin
+                    cnt <= 6'd0;
+                    gmii_txd <= 8'd0;
                     if(pos_tx_en) begin                 // arp_tx_en信号触发发送
                         skip_en <= 1'b1;
                         if(des_mac != 48'b0 || des_ip != 32'b0) begin   // 如果上层模块更新了目的mac和目的ip
@@ -257,7 +263,7 @@ module arp_tx(
                     else
                         cnt <= cnt + 6'd1;
                     
-                    if(data_cnt <= 6'd27) begin
+                    if(data_cnt <= 5'd27) begin
                         data_cnt <= data_cnt + 5'd1;
                         gmii_txd <= arp_data[data_cnt];
                     end
@@ -284,6 +290,7 @@ module arp_tx(
                         gmii_txd <= {~crc_data[0], ~crc_data[1], ~crc_data[2], ~crc_data[3],
                                     ~crc_data[4], ~crc_data[5], ~crc_data[6], ~crc_data[7]};
                         tx_done_t <= 1'b1;             // 实际上这个周期数据还没有发送完毕，所以延后一个周期
+                        arp_led <= 1'b1;
                         skip_en <= 1'b1;
                         cnt <= 6'd0;    
                     end
