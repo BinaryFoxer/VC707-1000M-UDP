@@ -48,7 +48,7 @@ module arp_ctrl(
                 arp_tx_en <= 1'b1;                  // 发送arp使能
                 arp_tx_type <= 1'b0;                // 发送arp请求
             end
-            else if((arp_rx_done == 1'b1) && (arp_tx_type == 1'b0)) begin   // 接收到arp请求,发送arp应答
+            else if((arp_rx_done == 1'b1) && (arp_rx_type == 1'b0)) begin   // 接收到arp请求,发送arp应答
                 arp_tx_en <= 1'b1;
                 arp_tx_type <= 1'b1;
             end
