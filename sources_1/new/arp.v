@@ -57,8 +57,8 @@ module arp(
         .rst(rst),        
         .arp_tx_en(arp_tx_en),  
         .arp_tx_type(arp_tx_type),
-        .des_mac(src_mac),                      // £¿£¿£¿£¿ 
-        .des_ip(src_ip),     
+        .des_mac(des_mac),                      // £¿£¿£¿£¿ 
+        .des_ip(des_ip),     
         .crc_data(crc_data),   
         .crc_next(crc_next[31:24]),   
         .crc_en(crc_en),     

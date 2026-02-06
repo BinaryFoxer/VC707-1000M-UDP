@@ -71,28 +71,27 @@ module eth_arp_test(
     wire                arp_get;
     wire        [4:0]   cur_state;
     
-    reg                 clk_v;
-    // 添加时钟频率计数器
-    reg [31:0] clk_counter;
-    reg [31:0] clk_period_counter;
-    reg clk_1hz;
 
     assign eth_rst_n = ~sys_rst;
     assign download_sus = arp_get;
 
-    always @(posedge gmii_tx_clk or posedge sys_rst) begin
-        if(sys_rst) begin
-            clk_counter <= 32'd0;
-            clk_period_counter <= 32'd0;
-            clk_1hz <= 1'b0;
-        end else begin
-            clk_counter <= clk_counter + 32'd1;
-            if(clk_counter >= 32'd124999999) begin  // 125MHz -> 1Hz
-                clk_counter <= 32'd0;
-                clk_1hz <= ~clk_1hz;
-            end
-        end
-    end
+    // // 添加时钟频率计数器
+    // reg [31:0] clk_counter;
+    // reg [31:0] clk_period_counter;
+    // reg clk_1hz;
+    // always @(posedge gmii_tx_clk or posedge sys_rst) begin
+    //     if(sys_rst) begin
+    //         clk_counter <= 32'd0;
+    //         clk_period_counter <= 32'd0;
+    //         clk_1hz <= 1'b0;
+    //     end else begin
+    //         clk_counter <= clk_counter + 32'd1;
+    //         if(clk_counter >= 32'd124999999) begin  // 125MHz -> 1Hz
+    //             clk_counter <= 32'd0;
+    //             clk_1hz <= ~clk_1hz;
+    //         end
+    //     end
+    // end
 
     // ---------------------------------产生200mhz时钟源-------------------------------------
     IBUFDS #(
@@ -128,7 +127,7 @@ module eth_arp_test(
         .clk(gmii_tx_clk), // input wire clk
     
     
-        .probe0(clk_counter), // input wire [0:0]  probe0  
+        .probe0(), // input wire [0:0]  probe0  
         .probe1(arp_get), // input wire [0:0]  probe1 
         .probe2(arp_rx_type), // input wire [0:0]  probe2 
         .probe3(gmii_rxd), // input wire [7:0]  probe3 
