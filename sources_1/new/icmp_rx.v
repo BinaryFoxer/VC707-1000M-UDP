@@ -51,7 +51,7 @@ module icmp_rx(
     reg [15:0]  eth_type;                       // 以太网类型
     reg [5:0]   ip_head_byte_num;               // ip头部数据字节计数
     reg [15:0]  ip_total_length;                // IP报文总长度
-    reg [1:0]   rec_en_cnt;                     // 8bit转32bit计数器，这里没有用到
+    reg [1:0]   rec_en_cnt;                     // 8bit转32bit计数器
     reg [7:0]   icmp_type;                      // ICMP报文类型：用于标识错误的差错报文或者查询类型的报告报文
     reg [7:0]   icmp_code;                      // ICMP报文代码：根据ICMP差错报文的类型，进一步分析错误的原因
 

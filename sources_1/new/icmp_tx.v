@@ -338,20 +338,21 @@ module icmp_tx(
                     crc_en <= 1'b1;
                     gmii_tx_en <= 1'b1;
                     tx_bit_sel <= tx_bit_sel + 2'b1;            // tx_bit_sel会一直在0~3循环
-                    if(tx_bit_sel == 3'd0)
+                    if(tx_bit_sel == 2'd0)
                         gmii_txd <= ip_header[cnt][31:24];
-                    else if(tx_bit_sel == 3'd1)
+                    else if(tx_bit_sel == 2'd1)
                         gmii_txd <= ip_header[cnt][23:16];
-                    else if(tx_bit_sel == 3'd2) begin
+                    else if(tx_bit_sel == 2'd2) begin
                         gmii_txd <= ip_header[cnt][15:8];
                         if(cnt == 5'd6)         // 提前请求发送数据，ICMP的数据段部分
                             tx_req <= 1'b1;
                     end
-                    else if(tx_bit_sel == 3'd3) begin
+                    else if(tx_bit_sel == 2'd3) begin
                         gmii_txd <= ip_header[cnt][7:0];
                         if(cnt == 5'd6) begin
                             skip_en <= 1'b1;                    // 28字节的IP头和ICMP头全部发送完
                             cnt <= 5'd0;
+                            // tx_req <= 1'b1;
                         end
                         else
                             cnt <= cnt + 5'd1;
@@ -363,7 +364,7 @@ module icmp_tx(
                     crc_en <= 1'b1;
                     gmii_tx_en <= 1'b1;
                     gmii_txd <= tx_data;
-                    tx_bit_sel <= 3'd0;
+                    tx_bit_sel <= 2'd0;
                     if(data_cnt < tx_data_num - 16'd1)
                         data_cnt <= data_cnt + 16'd1;
                     else if(data_cnt == tx_data_num - 16'd1) begin
@@ -385,27 +386,27 @@ module icmp_tx(
 
                 st_crc:begin
                     gmii_tx_en <= 1'b1;
-                    tx_bit_sel <= tx_bit_sel + 3'b1;
+                    tx_bit_sel <= tx_bit_sel + 2'b1;
                     tx_req <= 1'b0;
-                    if(tx_bit_sel == 3'd0) begin
+                    if(tx_bit_sel == 2'd0) begin
                         gmii_txd <= {~crc_next[0], ~crc_next[1], ~crc_next[2], ~crc_next[3],
                                     ~crc_next[4], ~crc_next[5], ~crc_next[6], ~crc_next[7]};
                     end
-                    else if(tx_bit_sel == 3'd1) begin
+                    else if(tx_bit_sel == 2'd1) begin
                         gmii_txd <= {~crc_data[16], ~crc_data[17], ~crc_data[18], ~crc_data[19],
                                     ~crc_data[20], ~crc_data[21], ~crc_data[22], ~crc_data[23]};
                     end
-                    else if(tx_bit_sel == 3'd2) begin
+                    else if(tx_bit_sel == 2'd2) begin
                         gmii_txd <= {~crc_data[8], ~crc_data[9], ~crc_data[10], ~crc_data[11],
                                     ~crc_data[12], ~crc_data[13], ~crc_data[14], ~crc_data[15]};
                         tx_done_t <= 1'b1;
                     end
-                    else if(tx_bit_sel == 3'd3) begin
+                    else if(tx_bit_sel == 2'd3) begin
                         gmii_txd <= {~crc_data[0], ~crc_data[1], ~crc_data[2], ~crc_data[3],
                                     ~crc_data[4], ~crc_data[5], ~crc_data[6], ~crc_data[7]};
                         // tx_done_t <= 1'b1;             // 实际上这个周期数据还没有发送完毕，所以延后一个周期
                         skip_en <= 1'b1;
-                        tx_bit_sel <= 3'd0;    
+                        tx_bit_sel <= 2'd0;    
                     end
                     else;
                 end
