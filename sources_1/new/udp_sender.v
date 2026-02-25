@@ -39,7 +39,8 @@ module udp_sender(
     parameter  BOARD_IP  = {8'd192,8'd168,8'd0,8'd2}; 
     // 目标mac和ip
     parameter  DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
-    parameter  DES_IP  = {8'd192,8'd168,8'd0,8'd3}; 
+    parameter  DES_IP    = {8'd192,8'd168,8'd0,8'd3}; 
+    parameter  DATA_LENGTH = 16'd222; 
 
     // 按键触发UDP发送
     localparam  IDLE        = 4'b0001;
@@ -125,7 +126,7 @@ module udp_sender(
     reg         fifo_rst;
     reg [7:0]   din_reg;
     reg         wr_en_reg;
-    reg [3:0]   byte_cnt;                                       // 写入字节计数
+    reg [15:0]  byte_cnt;                                       // 写入字节计数
     reg         send_start_pusle;                               // 发送触发脉冲
 
     assign  udp_sender_start = (~udp_sender_2) & udp_sender_1;
@@ -138,7 +139,7 @@ module udp_sender(
     assign  icmp_tx_byte_num = icmp_rec_byte_num;
 
     assign  udp_tx_start_en = send_start_pusle;
-    assign  udp_tx_byte_num = 16'd11;                           // Hello ASCII码长度
+    assign  udp_tx_byte_num = DATA_LENGTH;                           // Hello ASCII码长度
 
     // FIFO输入数据选择
     assign  fifo_wr_en_sel = (state == WRITE_DATA) ? wr_en_reg : rec_en;
@@ -166,7 +167,7 @@ module udp_sender(
             fifo_rst    <= 1'b0;
             din_reg     <= 8'd0;
             wr_en_reg   <= 1'b0;
-            byte_cnt    <= 4'd0;
+            byte_cnt    <= 16'd0;
             send_start_pusle    <= 1'b0;
         end
         else begin
@@ -183,27 +184,238 @@ module udp_sender(
                 RESET_FIFO:begin
                     fifo_rst <= 1'b0;
                     state    <= WRITE_DATA;
-                    byte_cnt <= 4'd0;
+                    byte_cnt <= 16'd0;
                 end
 
-                WRITE_DATA:begin
-                    if(byte_cnt < 4'd11) begin
+                WRITE_DATA:begin                                // 发送UDP报文数据部分内容，小于1500-20-8=1472 Bytes
+                    if(byte_cnt < DATA_LENGTH) begin
                         case(byte_cnt)
-                            4'd0 :din_reg <= "H";
-                            4'd1 :din_reg <= "e";
-                            4'd2 :din_reg <= "l";
-                            4'd3 :din_reg <= "l";
-                            4'd4 :din_reg <= "o";
-                            4'd5 :din_reg <= " ";
-                            4'd6 :din_reg <= "w";
-                            4'd7 :din_reg <= "o";
-                            4'd8 :din_reg <= "r";
-                            4'd9 :din_reg <= "l";
-                            4'd10:din_reg <= "d";
+                            16'd0  : din_reg <= "T";
+                            16'd1  : din_reg <= "h";
+                            16'd2  : din_reg <= "i";
+                            16'd3  : din_reg <= "s";
+                            16'd4  : din_reg <= " ";
+                            16'd5  : din_reg <= "i";
+                            16'd6  : din_reg <= "s";
+                            16'd7  : din_reg <= " ";
+                            16'd8  : din_reg <= "a";
+                            16'd9  : din_reg <= " ";
+                            16'd10 : din_reg <= "1";
+                            16'd11 : din_reg <= "0";
+                            16'd12 : din_reg <= "0";
+                            16'd13 : din_reg <= "0";
+                            16'd14 : din_reg <= "M";
+                            16'd15 : din_reg <= " ";
+                            16'd16 : din_reg <= "U";
+                            16'd17 : din_reg <= "D";
+                            16'd18 : din_reg <= "P";
+                            16'd19 : din_reg <= " ";
+                            16'd20 : din_reg <= "E";
+                            16'd21 : din_reg <= "t";
+                            16'd22 : din_reg <= "h";
+                            16'd23 : din_reg <= "e";
+                            16'd24 : din_reg <= "r";
+                            16'd25 : din_reg <= "n";
+                            16'd26 : din_reg <= "e";
+                            16'd27 : din_reg <= "t";
+                            16'd28 : din_reg <= " ";
+                            16'd29 : din_reg <= "c";
+                            16'd30 : din_reg <= "o";
+                            16'd31 : din_reg <= "m";
+                            16'd32 : din_reg <= "m";
+                            16'd33 : din_reg <= "u";
+                            16'd34 : din_reg <= "n";
+                            16'd35 : din_reg <= "i";
+                            16'd36 : din_reg <= "c";
+                            16'd37 : din_reg <= "a";
+                            16'd38 : din_reg <= "t";
+                            16'd39 : din_reg <= "i";
+                            16'd40 : din_reg <= "o";
+                            16'd41 : din_reg <= "n";
+                            16'd42 : din_reg <= " ";
+                            16'd43 : din_reg <= "t";
+                            16'd44 : din_reg <= "e";
+                            16'd45 : din_reg <= "s";
+                            16'd46 : din_reg <= "t";
+                            16'd47 : din_reg <= " ";
+                            16'd48 : din_reg <= "b";
+                            16'd49 : din_reg <= "a";
+                            16'd50 : din_reg <= "s";
+                            16'd51 : din_reg <= "e";
+                            16'd52 : din_reg <= "d";
+                            16'd53 : din_reg <= " ";
+                            16'd54 : din_reg <= "o";
+                            16'd55 : din_reg <= "n";
+                            16'd56 : din_reg <= " ";
+                            16'd57 : din_reg <= "V";
+                            16'd58 : din_reg <= "C";
+                            16'd59 : din_reg <= "7";
+                            16'd60 : din_reg <= "0";
+                            16'd61 : din_reg <= "7";
+                            16'd62 : din_reg <= ".";
+                            16'd63 : din_reg <= " ";
+                            16'd64 : din_reg <= "I";
+                            16'd65 : din_reg <= "f";
+                            16'd66 : din_reg <= " ";
+                            16'd67 : din_reg <= "y";
+                            16'd68 : din_reg <= "o";
+                            16'd69 : din_reg <= "u";
+                            16'd70 : din_reg <= " ";
+                            16'd71 : din_reg <= "r";
+                            16'd72 : din_reg <= "e";
+                            16'd73 : din_reg <= "c";
+                            16'd74 : din_reg <= "e";
+                            16'd75 : din_reg <= "i";
+                            16'd76 : din_reg <= "v";
+                            16'd77 : din_reg <= "e";
+                            16'd78 : din_reg <= " ";
+                            16'd79 : din_reg <= "t";
+                            16'd80 : din_reg <= "h";
+                            16'd81 : din_reg <= "i";
+                            16'd82 : din_reg <= "s";
+                            16'd83 : din_reg <= " ";
+                            16'd84 : din_reg <= "t";
+                            16'd85 : din_reg <= "e";
+                            16'd86 : din_reg <= "x";
+                            16'd87 : din_reg <= "t";
+                            16'd88 : din_reg <= ",";
+                            16'd89 : din_reg <= " ";
+                            16'd90 : din_reg <= "i";
+                            16'd91 : din_reg <= "t";
+                            16'd92 : din_reg <= " ";
+                            16'd93 : din_reg <= "i";
+                            16'd94 : din_reg <= "n";
+                            16'd95 : din_reg <= "d";
+                            16'd96 : din_reg <= "i";
+                            16'd97 : din_reg <= "c";
+                            16'd98 : din_reg <= "a";
+                            16'd99 : din_reg <= "t";
+                            16'd100: din_reg <= "e";
+                            16'd101: din_reg <= "s";
+                            16'd102: din_reg <= " ";
+                            16'd103: din_reg <= "t";
+                            16'd104: din_reg <= "h";
+                            16'd105: din_reg <= "a";
+                            16'd106: din_reg <= "t";
+                            16'd107: din_reg <= " ";
+                            16'd108: din_reg <= "t";
+                            16'd109: din_reg <= "h";
+                            16'd110: din_reg <= "e";
+                            16'd111: din_reg <= " ";
+                            16'd112: din_reg <= "f";
+                            16'd113: din_reg <= "u";
+                            16'd114: din_reg <= "n";
+                            16'd115: din_reg <= "c";
+                            16'd116: din_reg <= "t";
+                            16'd117: din_reg <= "i";
+                            16'd118: din_reg <= "o";
+                            16'd119: din_reg <= "n";
+                            16'd120: din_reg <= " ";
+                            16'd121: din_reg <= "o";
+                            16'd122: din_reg <= "f";
+                            16'd123: din_reg <= " ";
+                            16'd124: din_reg <= "t";
+                            16'd125: din_reg <= "r";
+                            16'd126: din_reg <= "i";
+                            16'd127: din_reg <= "g";
+                            16'd128: din_reg <= "g";
+                            16'd129: din_reg <= "e";
+                            16'd130: din_reg <= "r";
+                            16'd131: din_reg <= "i";
+                            16'd132: din_reg <= "n";
+                            16'd133: din_reg <= "g";
+                            16'd134: din_reg <= " ";
+                            16'd135: din_reg <= "t";
+                            16'd136: din_reg <= "h";
+                            16'd137: din_reg <= "e";
+                            16'd138: din_reg <= " ";
+                            16'd139: din_reg <= "b";
+                            16'd140: din_reg <= "u";
+                            16'd141: din_reg <= "t";
+                            16'd142: din_reg <= "t";
+                            16'd143: din_reg <= "o";
+                            16'd144: din_reg <= "n";
+                            16'd145: din_reg <= " ";
+                            16'd146: din_reg <= "t";
+                            16'd147: din_reg <= "o";
+                            16'd148: din_reg <= " ";
+                            16'd149: din_reg <= "s";
+                            16'd150: din_reg <= "e";
+                            16'd151: din_reg <= "n";
+                            16'd152: din_reg <= "d";
+                            16'd153: din_reg <= " ";
+                            16'd154: din_reg <= "U";
+                            16'd155: din_reg <= "D";
+                            16'd156: din_reg <= "P";
+                            16'd157: din_reg <= " ";
+                            16'd158: din_reg <= "p";
+                            16'd159: din_reg <= "a";
+                            16'd160: din_reg <= "c";
+                            16'd161: din_reg <= "k";
+                            16'd162: din_reg <= "e";
+                            16'd163: din_reg <= "t";
+                            16'd164: din_reg <= "s";
+                            16'd165: din_reg <= " ";
+                            16'd166: din_reg <= "t";
+                            16'd167: din_reg <= "o";
+                            16'd168: din_reg <= " ";
+                            16'd169: din_reg <= "t";
+                            16'd170: din_reg <= "h";
+                            16'd171: din_reg <= "e";
+                            16'd172: din_reg <= " ";
+                            16'd173: din_reg <= "P";
+                            16'd174: din_reg <= "C";
+                            16'd175: din_reg <= " ";
+                            16'd176: din_reg <= "b";
+                            16'd177: din_reg <= "y";
+                            16'd178: din_reg <= " ";
+                            16'd179: din_reg <= "t";
+                            16'd180: din_reg <= "h";
+                            16'd181: din_reg <= "e";
+                            16'd182: din_reg <= " ";
+                            16'd183: din_reg <= "F";
+                            16'd184: din_reg <= "P";
+                            16'd185: din_reg <= "G";
+                            16'd186: din_reg <= "A";
+                            16'd187: din_reg <= " ";
+                            16'd188: din_reg <= "h";
+                            16'd189: din_reg <= "a";
+                            16'd190: din_reg <= "s";
+                            16'd191: din_reg <= " ";
+                            16'd192: din_reg <= "b";
+                            16'd193: din_reg <= "e";
+                            16'd194: din_reg <= "e";
+                            16'd195: din_reg <= "n";
+                            16'd196: din_reg <= " ";
+                            16'd197: din_reg <= "s";
+                            16'd198: din_reg <= "u";
+                            16'd199: din_reg <= "c";
+                            16'd200: din_reg <= "c";
+                            16'd201: din_reg <= "e";
+                            16'd202: din_reg <= "s";
+                            16'd203: din_reg <= "s";
+                            16'd204: din_reg <= "f";
+                            16'd205: din_reg <= "u";
+                            16'd206: din_reg <= "l";
+                            16'd207: din_reg <= "l";
+                            16'd208: din_reg <= "y";
+                            16'd209: din_reg <= " ";
+                            16'd210: din_reg <= "i";
+                            16'd211: din_reg <= "m";
+                            16'd212: din_reg <= "p";
+                            16'd213: din_reg <= "l";
+                            16'd214: din_reg <= "e";
+                            16'd215: din_reg <= "m";
+                            16'd216: din_reg <= "e";
+                            16'd217: din_reg <= "n";
+                            16'd218: din_reg <= "t";
+                            16'd219: din_reg <= "e";
+                            16'd220: din_reg <= "d";
+                            16'd221: din_reg <= ".";
                             default:din_reg <= 8'd0;
                         endcase
                         wr_en_reg <= 1'b1;
-                        byte_cnt  <= byte_cnt + 4'd1;
+                        byte_cnt  <= byte_cnt + 16'd1;
                     end
                     else begin
                         wr_en_reg <= 1'b0;
