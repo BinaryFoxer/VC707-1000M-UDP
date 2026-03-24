@@ -130,10 +130,11 @@ module src_data_ctrl(
     // fifo输入数据选择
     wire                fifo_wr_en_sel;
     wire        [7:0]   fifo_din_sel;
-    wire        [11:0]  wr_data_count;                                  // FIFO写入数据计数
+    wire        [15:0]  wr_data_count;                                  // FIFO写入数据计数
     wire                fifo_full;
     wire                wr_rst_busy;
     wire                rd_rst_busy;
+    wire                prog_full;                              // 可编程满标志，65533时拉高
 
     reg [4:0]   state;                                          // 数据写入状态
     reg [2:0]   tx_state;                                       // UDP发送状态
@@ -232,7 +233,7 @@ module src_data_ctrl(
 
                 WRITE_DATA:begin              // 写入数据部分内容，小于1500-20-8=1472 Bytes
                     if(byte_cnt < DATA_LENGTH) begin
-                        if(!fifo_full) begin
+                        if(!prog_full) begin                    // 未达到发送阈值时写入
                             din_reg   <= din_reg + 8'd1;
                             wr_en_reg <= 1'b1;
                             byte_cnt  <= byte_cnt + 32'd1;
@@ -320,6 +321,7 @@ module src_data_ctrl(
       .empty(),                  // output wire empty
       .rd_data_count(),                // output wire [15 : 0] rd_data_count
       .wr_data_count(wr_data_count),  // output wire [15 : 0] wr_data_count
+      .prog_full(prog_full),                // output wire prog_full
       .wr_rst_busy(wr_rst_busy),      // output wire wr_rst_busy
       .rd_rst_busy(rd_rst_busy)      // output wire rd_rst_busy
     );
