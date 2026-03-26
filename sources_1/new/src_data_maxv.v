@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
 // -------------------------------------------------------------------
-// 按键触发FPGA发送UDP报文
+// 按键触发FPGA发送UDP报文，200MHz极限写入速率
 // -------------------------------------------------------------------
 
-module src_data_ctrl(
+module src_data_maxv(
     input               sys_clk_p,               // 200mhz时钟源
     input               sys_clk_n,
     input               sys_rst,
@@ -131,6 +131,7 @@ module src_data_ctrl(
     wire                fifo_wr_en_sel;
     wire        [7:0]   fifo_din_sel;
     wire        [15:0]  wr_data_count;                                  // FIFO写入数据计数
+    wire        [15:0]  rd_data_count;                                  // FIFO写入数据计数
     wire                fifo_full;
     wire                wr_rst_busy;
     wire                rd_rst_busy;
@@ -147,7 +148,7 @@ module src_data_ctrl(
 
     reg         tx_busy;                                        // UDP发送忙
     reg [15:0]  tx_byte_num;                                    // UDP报文数据段长度
-    reg [5:0]   fifo_rst_cnt;                                   // 等待FIFO复位完成
+    reg [7:0]   fifo_rst_cnt;                                   // 等待FIFO复位完成
     reg         sys_clk_cnt;
     reg         src_data_clk;
 
@@ -169,8 +170,8 @@ module src_data_ctrl(
     assign  fifo_wr_en_sel = wr_en_reg;
     assign  fifo_din_sel   = din_reg;
 
-    // 打三拍采集udp_sender_key的上升沿
-    always @(posedge gmii_tx_clk or posedge sys_rst) begin
+    // 打三拍采集udp_sender_key的上升沿，用200MHz时钟
+    always @(posedge sys_clk or posedge sys_rst) begin
         if(sys_rst) begin
             udp_sender_0 <= 1'b0;
             udp_sender_1 <= 1'b0;
@@ -183,9 +184,9 @@ module src_data_ctrl(
         end
     end
 
-
+    // ---------------------------------    数据写入状态机     -----------------------
     // 按键触发数据写入FIFO 时钟可选gmii_tx_clk
-    always @(posedge gmii_tx_clk or posedge sys_rst) begin
+    always @(posedge sys_clk or posedge sys_rst) begin
         if(sys_rst) begin
             state           <= IDLE;
             fifo_rst        <= 1'b0;
@@ -193,7 +194,7 @@ module src_data_ctrl(
             wr_en_reg       <= 1'b0;
             byte_cnt        <= 32'd0;
             wr_data_done    <= 1'b0;
-            fifo_rst_cnt    <= 6'd0;
+            fifo_rst_cnt    <= 8'd0;
         end
         else begin
             case(state)
@@ -207,10 +208,20 @@ module src_data_ctrl(
                 end
 
                 RESET_FIFO:begin
-                    fifo_rst <= 1'b0;
                     byte_cnt <= 32'd0;
                     din_reg  <= 8'd0;
-                    state    <= WAIT_RESET;
+                    fifo_rst_cnt <= 8'd0;
+                    fifo_rst <= 1'b1;
+                    // 保持复位时间三个慢时钟以上，再释放复位
+                    if(fifo_rst_cnt >= 8'd10) begin
+                        fifo_rst <= 1'b0;
+                        state    <= WAIT_RESET;
+                        fifo_rst_cnt <= 8'd0;
+                    end
+                    else begin
+                        state <= RESET_FIFO;
+                        fifo_rst_cnt <= fifo_rst_cnt + 8'd1;
+                    end
                 end
 
                 WAIT_RESET:begin
@@ -218,12 +229,13 @@ module src_data_ctrl(
                         state <= WAIT_RESET;
                     end
                     else begin
-                        if(fifo_rst_cnt > 6'd50) begin
+                        // 延时一段时间再对FIFO进行操作
+                        if(fifo_rst_cnt > 8'd100) begin
                             state <= WRITE_DATA;
-                            fifo_rst_cnt <= 6'd0;
+                            fifo_rst_cnt <= 8'd0;
                         end
                         else begin
-                            fifo_rst_cnt <= fifo_rst_cnt + 6'd1;
+                            fifo_rst_cnt <= fifo_rst_cnt + 8'd1;
                             state <= WAIT_RESET;
                         end
 
@@ -258,6 +270,7 @@ module src_data_ctrl(
         end
     end
 
+    // ------------------------------   数据传输状态机  ----------------------------
     // always块监听wr_data_count触发发送UDP报文
     always @(posedge gmii_tx_clk or posedge sys_rst) begin
         if(sys_rst) begin
@@ -270,7 +283,7 @@ module src_data_ctrl(
             send_start_pusle <= 1'b0;
             case(tx_state)
                 TX_IDLE:begin
-                    if((wr_data_count >= UDP_SEND_LENGTH) && !tx_busy) begin
+                    if((rd_data_count >= UDP_SEND_LENGTH) && !tx_busy) begin
                         tx_state <= TX_TRIGGER;
                         tx_byte_num <= UDP_SEND_LENGTH;
                     end
@@ -311,7 +324,7 @@ module src_data_ctrl(
     // FIFO例化
     fifo_generator_1 unsyc_data_fifo (
       .rst(sys_rst | fifo_rst),            // input wire rst
-      .wr_clk(gmii_tx_clk),                // input wire wr_clk
+      .wr_clk(sys_clk),                // input wire wr_clk
       .rd_clk(gmii_tx_clk),                // input wire rd_clk
       .din(fifo_din_sel),                      // input wire [7 : 0] din
       .wr_en(fifo_wr_en_sel),                  // input wire wr_en
@@ -319,7 +332,7 @@ module src_data_ctrl(
       .dout(tx_data),                    // output wire [7 : 0] dout
       .full(fifo_full),                    // output wire full
       .empty(),                  // output wire empty
-      .rd_data_count(),                // output wire [15 : 0] rd_data_count
+      .rd_data_count(rd_data_count),                // output wire [15 : 0] rd_data_count
       .wr_data_count(wr_data_count),  // output wire [15 : 0] wr_data_count
       .prog_full(prog_full),                // output wire prog_full
       .wr_rst_busy(wr_rst_busy),      // output wire wr_rst_busy
@@ -346,17 +359,17 @@ module src_data_ctrl(
     
         .probe0(udp_sender_start), // input wire [0:0]  probe0  
         .probe1(fifo_rst), // input wire [0:0]  probe1 
-        .probe2(fifo_full), // input wire [0:0]  probe2 
-        .probe3(gmii_rx_dv), // input wire [0:0]  probe3 
+        .probe2(wr_rst_busy), // input wire [0:0]  probe2 
+        .probe3(rd_rst_busy), // input wire [0:0]  probe3 
         .probe4(gmii_rxd), // input wire [7:0]  probe4 
         .probe5(gmii_txd), // input wire [7:0]  probe5 
-        .probe6(icmp_gmii_txd), // input wire [7:0]  probe6 
+        .probe6(fifo_rst_cnt), // input wire [7:0]  probe6 
         .probe7(icmp_rec_byte_num), // input wire [15:0]  probe7 
         .probe8(send_start_pusle), // input wire [0:0]  probe8 
-        .probe9(udp_tx_done), // input wire [0:0]  probe9 
+        .probe9(sys_rst), // input wire [0:0]  probe9 
         .probe10(din_reg), // input wire [7:0]  probe10 
         .probe11(tx_data), // input wire [7:0]  probe11
-        .probe12(cur_state)
+        .probe12(state)
     );
 
     // ---------------------------------产生200mhz时钟源-------------------------------------
@@ -536,7 +549,7 @@ module src_data_ctrl(
     mdio_wr_test u_mdio_wr_test(
         .sys_clk(sys_clk),
         .sys_rst(sys_rst),
-        //.eth_rst_n(eth_rst_n),
+//        .eth_rst_n(eth_rst_n),
         .eth_mdc(eth_mdc),
         .eth_mdio(eth_mdio),
         .touch_key(touch_key),

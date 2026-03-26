@@ -6,7 +6,7 @@ module mdio_wr_test(
     input               sys_clk,            // ÊäÈë200mhzÖ÷Ê±ÖÓ
     input               sys_rst,
 
-    output              eth_rst_n,
+    //output              eth_rst_n,
     output              eth_mdc,
     inout               eth_mdio,
 
