@@ -322,7 +322,7 @@ module eth_udp_test(
     mdio_wr_test u_mdio_wr_test(
         .sys_clk(sys_clk),
         .sys_rst(sys_rst),
-        .eth_rst_n(eth_rst_n),
+//        .eth_rst_n(eth_rst_n),
         .eth_mdc(eth_mdc),
         .eth_mdio(eth_mdio),
         .touch_key(touch_key),

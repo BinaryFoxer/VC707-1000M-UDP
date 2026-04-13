@@ -40,8 +40,8 @@ module src_data_ctrl(
     // 目标mac和ip
     parameter  DES_MAC   = 48'hff_ff_ff_ff_ff_ff;
     parameter  DES_IP    = {8'd192,8'd168,8'd0,8'd3}; 
-    parameter  DATA_LENGTH     = 32'd104_857_600;         // 数据总长度:100MB
-    parameter  UDP_SEND_LENGTH = 16'd1400;                // UDP触发发送长度
+    parameter  DATA_LENGTH     = 32'd524_288_000;         // 数据总长度:100MB
+    parameter  UDP_SEND_LENGTH = 16'd1472;                // UDP触发发送长度
 
 
     // 按键触发数据写入
@@ -150,6 +150,7 @@ module src_data_ctrl(
     reg [5:0]   fifo_rst_cnt;                                   // 等待FIFO复位完成
     reg         sys_clk_cnt;
     reg         src_data_clk;
+    reg         src_clk_50m;                                    // 50MHz源端时钟
 
     assign  udp_sender_start = (~udp_sender_2) & udp_sender_1;
     assign  des_ip = src_ip;
@@ -182,10 +183,23 @@ module src_data_ctrl(
             udp_sender_2 <= udp_sender_1;
         end
     end
+    
+     // 50MHz时钟分频
+    always @(posedge sys_clk or posedge sys_rst) begin
+        if(sys_rst) begin
+            src_clk_50m <= 1'b0;
+            sys_clk_cnt <= 1'b0;
+        end
+        else begin
+            sys_clk_cnt <= sys_clk_cnt + 1'b1;
+            if(sys_clk_cnt)
+                src_clk_50m <= ~src_clk_50m;
+        end
 
+    end
 
     // 按键触发数据写入FIFO 时钟可选gmii_tx_clk
-    always @(posedge gmii_tx_clk or posedge sys_rst) begin
+    always @(posedge src_clk_50m or posedge sys_rst) begin
         if(sys_rst) begin
             state           <= IDLE;
             fifo_rst        <= 1'b0;
@@ -311,7 +325,7 @@ module src_data_ctrl(
     // FIFO例化
     fifo_generator_1 unsyc_data_fifo (
       .rst(sys_rst | fifo_rst),            // input wire rst
-      .wr_clk(gmii_tx_clk),                // input wire wr_clk
+      .wr_clk(src_clk_50m),                // input wire wr_clk
       .rd_clk(gmii_tx_clk),                // input wire rd_clk
       .din(fifo_din_sel),                      // input wire [7 : 0] din
       .wr_en(fifo_wr_en_sel),                  // input wire wr_en
