@@ -202,8 +202,8 @@ module comparison_test(
     end
 
     // ---------------------------------    数据写入状态机     -----------------------
-    // 按键触发数据写入FIFO 时钟可选gmii_tx_clk/srs_clk_50m/sys_clk
-    always @(posedge sys_clk or posedge sys_rst) begin
+    // 按键触发数据写入FIFO 时钟可选gmii_tx_clk/src_clk_50m/sys_clk
+    always @(posedge gmii_tx_clk or posedge sys_rst) begin
         if(sys_rst) begin
             state           <= IDLE;
             fifo_rst        <= 1'b0;
@@ -230,7 +230,7 @@ module comparison_test(
                     fifo_rst_cnt <= 8'd0;
                     fifo_rst <= 1'b1;
                     // 保持复位时间三个慢时钟以上，再释放复位
-                    if(fifo_rst_cnt >= 8'd100) begin
+                    if(fifo_rst_cnt >= 8'd10) begin
                         fifo_rst <= 1'b0;
                         state    <= WAIT_RESET;
                         fifo_rst_cnt <= 8'd0;
@@ -247,7 +247,7 @@ module comparison_test(
                     end
                     else begin
                         // 延时一段时间再对FIFO进行操作，50MHz慢时钟需延时100个周期，200MHz10个周期即可
-                        if(fifo_rst_cnt > 8'd10) begin
+                        if(fifo_rst_cnt > 8'd100) begin
                             state <= WRITE_DATA;
                             fifo_rst_cnt <= 8'd0;
                         end
@@ -262,18 +262,19 @@ module comparison_test(
 
                 WRITE_DATA:begin              // 写入数据部分内容，小于1500-20-8=1472 Bytes
                     if(byte_cnt < DATA_LENGTH) begin
-                        // if(!prog_full) begin                    // 未达到发送阈值时写入
-                        //     din_reg   <= din_reg + 8'd1;
-                        //     wr_en_reg <= 1'b1;
-                        //     byte_cnt  <= byte_cnt + 32'd1;
-                        // end
-                        // 不使用prog_full反压，直接自增写入就去掉条件即可
-                        din_reg   <= din_reg + 8'd1;
-                        wr_en_reg <= 1'b1;
-                        byte_cnt  <= byte_cnt + 32'd1;
-                    //    else begin
-                    //        wr_en_reg <= 1'b0;
-                    //    end
+                         if(!prog_full) begin                    // 未达到发送阈值时写入
+                             din_reg   <= din_reg + 8'd1;
+                             wr_en_reg <= 1'b1;
+                             byte_cnt  <= byte_cnt + 32'd1;
+                         end
+                        else begin
+                            wr_en_reg <= 1'b0;
+                        end
+                    
+//                        // 不使用prog_full反压，直接自增写入就去掉条件即可
+//                        din_reg   <= din_reg + 8'd1;
+//                        wr_en_reg <= 1'b1;
+//                        byte_cnt  <= byte_cnt + 32'd1;
 
                     end
                     else begin
@@ -345,7 +346,7 @@ module comparison_test(
     // FIFO例化
     fifo_generator_1 unsyc_data_fifo (
       .rst(sys_rst | fifo_rst),            // input wire rst
-      .wr_clk(sys_clk),                // input wire wr_clk:gmii_tx_clk/sys_clk_50m/sys_clk
+      .wr_clk(gmii_tx_clk),                // input wire wr_clk:gmii_tx_clk/src_clk_50m/sys_clk
       .rd_clk(gmii_tx_clk),                // input wire rd_clk
       .din(fifo_din_sel),                      // input wire [7 : 0] din
       .wr_en(fifo_wr_en_sel),                  // input wire wr_en

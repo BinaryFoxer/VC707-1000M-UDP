@@ -1,3 +1,8 @@
 sources_1/ip/
 mdio/new/
 constrs_1/new/
+*.py
+test/
+.venv/
+plots/
+pip_pkg/
